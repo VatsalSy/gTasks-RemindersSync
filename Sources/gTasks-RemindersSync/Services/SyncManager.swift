@@ -27,41 +27,71 @@ class SyncManager {
         let localReminders = try await remindersService.fetchReminders()
         print("Found \(localReminders.count) reminders in Apple Reminders")
         
-        // Create a dictionary of existing reminders by title for quick lookup
+        // Create dictionaries for quick lookup
         let remindersByTitle = localReminders.reduce(into: [String: Task]()) { dict, reminder in
             dict[reminder.title] = reminder
         }
+        let googleTasksByTitle = tasks.reduce(into: [String: Task]()) { dict, task in
+            dict[task.title] = task
+        }
         
-        print("\nSyncing Google Tasks to Apple Reminders...")
-        
-        // Process each Google task
+        print("\nStep 1: Syncing completion status for existing tasks...")
+        // First sync completion status for tasks that exist in both places
         for task in tasks {
-            print("\nProcessing Google task: \(task.title) (ID: \(task.id))")
-            
             if let existingReminder = remindersByTitle[task.title] {
-                print(" - Found existing reminder with ID: \(existingReminder.id)")
+                print("\nProcessing task: \(task.title)")
                 
-                // Update the reminder if needed
-                if existingReminder.isCompleted != task.isCompleted || 
-                   existingReminder.notes != task.notes ||
-                   existingReminder.dueDate != task.dueDate {
-                    print(" - Updating reminder to match Google task")
-                    var updatedTask = existingReminder
-                    updatedTask.isCompleted = task.isCompleted
-                    updatedTask.notes = task.notes
-                    updatedTask.dueDate = task.dueDate
-                    let _ = try await remindersService.updateReminder(updatedTask)
-                    print(" - Successfully updated reminder")
-                } else {
-                    print(" - Reminder is already in sync")
+                // If either is completed, mark both as completed
+                if task.isCompleted || existingReminder.isCompleted {
+                    print(" - One or both marked as complete, syncing completion status")
+                    
+                    // Update reminder if needed
+                    if !existingReminder.isCompleted {
+                        print(" - Updating reminder completion status")
+                        var updatedReminder = existingReminder
+                        updatedReminder.isCompleted = true
+                        let _ = try await remindersService.updateReminder(updatedReminder)
+                    }
+                    
+                    // Update Google task if needed
+                    if !task.isCompleted {
+                        print(" - Updating Google task completion status")
+                        var updatedTask = task
+                        updatedTask.isCompleted = true
+                        // Ensure we keep all original task properties
+                        updatedTask.title = task.title
+                        updatedTask.notes = task.notes
+                        updatedTask.dueDate = task.dueDate
+                        updatedTask.source = task.source  // Keep the original source with taskId
+                        print(" - Updating Google task: \(updatedTask.title) with ID from source: \(updatedTask.id)")
+                        let _ = try await googleTasksService.updateTask(updatedTask)
+                        print(" - Successfully updated Google task completion status")
+                    }
                 }
-            } else {
-                print(" - Creating new reminder")
-                // Create a new reminder from the Google task
+            }
+        }
+        
+        print("\nStep 2: Creating missing reminders from Google Tasks...")
+        // Create reminders for Google Tasks that don't exist in Reminders
+        for task in tasks {
+            if remindersByTitle[task.title] == nil {
+                print("\nCreating reminder for task: \(task.title)")
                 var reminderTask = task
                 reminderTask.source = .appleReminders(reminderId: "")
                 let createdTask = try await remindersService.createReminder(reminderTask)
                 print(" - Successfully created reminder with ID: \(createdTask.id)")
+            }
+        }
+        
+        print("\nStep 3: Creating missing Google Tasks from Reminders...")
+        // Create Google Tasks for Reminders that don't exist in Google Tasks
+        for reminder in localReminders {
+            if googleTasksByTitle[reminder.title] == nil {
+                print("\nCreating Google task for reminder: \(reminder.title)")
+                var newTask = reminder
+                newTask.source = .googleTasks(taskId: "")
+                let createdTask = try await googleTasksService.createTask(newTask)
+                print(" - Successfully created Google task with ID: \(createdTask.id)")
             }
         }
         

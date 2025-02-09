@@ -289,6 +289,7 @@ class GoogleTasksService {
         }
         
         let updatedTask = GTLRTasks_Task()
+        updatedTask.identifier = taskId  // Set the task ID explicitly
         updatedTask.title = task.title
         updatedTask.notes = task.notes
         if let dueDate = task.dueDate {
@@ -301,6 +302,7 @@ class GoogleTasksService {
         return try await withCheckedThrowingContinuation { continuation in
             service.executeQuery(query) { (ticket, result, error) in
                 if let error = error {
+                    print("Error updating Google task: \(error.localizedDescription)")
                     continuation.resume(throwing: error)
                     return
                 }
@@ -324,6 +326,7 @@ class GoogleTasksService {
                     source: .googleTasks(taskId: id)
                 )
                 
+                print("Successfully updated Google task")
                 continuation.resume(returning: task)
             }
         }
