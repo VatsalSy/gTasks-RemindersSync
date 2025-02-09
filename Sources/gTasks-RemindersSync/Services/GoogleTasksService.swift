@@ -282,6 +282,12 @@ class GoogleTasksService {
             throw NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid task source"])
         }
         
+        print("Updating Google task: \(task.title) (ID: \(taskId))")
+        print(" - Completed: \(task.isCompleted)")
+        if let dueDate = task.dueDate {
+            print(" - Due date: \(dueDate)")
+        }
+        
         let updatedTask = GTLRTasks_Task()
         updatedTask.title = task.title
         updatedTask.notes = task.notes

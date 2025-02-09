@@ -67,8 +67,16 @@ class RemindersService {
                     return
                 }
                 
+                print("\nProcessing reminders from Apple Reminders...")
                 let tasks = reminders.map { reminder -> Task in
-                    Task(
+                    print("\nProcessing reminder: \(reminder.title ?? "")")
+                    print(" - ID: \(reminder.calendarItemIdentifier)")
+                    print(" - Completed: \(reminder.isCompleted)")
+                    if let lastModified = reminder.lastModifiedDate {
+                        print(" - Last modified: \(lastModified)")
+                    }
+                    
+                    return Task(
                         id: reminder.calendarItemIdentifier,
                         title: reminder.title ?? "",
                         notes: reminder.notes,
