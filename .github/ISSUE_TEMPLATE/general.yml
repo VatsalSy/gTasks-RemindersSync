@@ -1,0 +1,20 @@
+name: 💬 General Issue
+description: Open a general issue
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to create an issue!
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: Please describe your issue or question
+      placeholder: I have a question about...
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Add any other context, screenshots, or relevant information here

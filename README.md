@@ -1,5 +1,15 @@
 # GTasks-RemindersSync
 
+[![GitHub release (latest by date)](https://img.shields.io/github/v/release/VatsalSy/gTasks-RemindersSync)](https://github.com/VatsalSy/gTasks-RemindersSync/releases/latest)
+[![License](https://img.shields.io/github/license/VatsalSy/gTasks-RemindersSync)](https://github.com/VatsalSy/gTasks-RemindersSync/blob/main/LICENSE)
+[![Swift](https://img.shields.io/badge/Swift-5.5%2B-orange)](https://swift.org)
+[![Platform](https://img.shields.io/badge/platform-macOS-lightgrey)]()
+[![Open Issues](https://img.shields.io/github/issues/VatsalSy/gTasks-RemindersSync)](https://github.com/VatsalSy/gTasks-RemindersSync/issues)
+
+[![Report Bug](https://img.shields.io/badge/Report%20Bug-red?style=for-the-badge&logo=github)](https://github.com/VatsalSy/gTasks-RemindersSync/issues/new?assignees=&labels=bug&projects=&template=bug_report.yml)
+[![Request Feature](https://img.shields.io/badge/Request%20Feature-blue?style=for-the-badge&logo=github)](https://github.com/VatsalSy/gTasks-RemindersSync/issues/new?assignees=&labels=enhancement&projects=&template=feature_request.yml)
+[![Open Issue](https://img.shields.io/badge/Open%20Issue-green?style=for-the-badge&logo=github)](https://github.com/VatsalSy/gTasks-RemindersSync/issues/new?assignees=&labels=&projects=&template=general.yml)
+
 A Swift command-line tool that provides synchronization between Google Tasks and Apple Reminders. This tool helps you keep your tasks in sync across both platforms, with special handling for completion status.
 
 ## Features
