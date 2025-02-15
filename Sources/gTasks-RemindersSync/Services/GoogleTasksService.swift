@@ -20,7 +20,7 @@ class GoogleTasksService {
             authorizationEndpoint: URL(string: "https://accounts.google.com/o/oauth2/v2/auth")!,
             tokenEndpoint: URL(string: "https://oauth2.googleapis.com/token")!
         )
-        let redirectURI = "urn:ietf:wg:oauth:2.0:oob" // Use manual copy-paste flow for simplicity
+        let redirectURI = "http://localhost:8080"
         
         // Try to load existing token
         if let tokenString = Environment.googleToken(),
@@ -45,15 +45,31 @@ class GoogleTasksService {
                 codeVerifier: codeVerifier,
                 codeChallenge: codeChallenge,
                 codeChallengeMethod: OIDOAuthorizationRequestCodeChallengeMethodS256,
-                additionalParameters: nil
+                additionalParameters: [
+                    "access_type": "offline"
+                ]
             )
+            
+            // Create a semaphore to wait for the authorization
+            let semaphore = DispatchSemaphore(value: 0)
+            var authCode: String?
+            
+            // Start local server
+            let server = SimpleServer(port: 8080)
+            try server.start { code in
+                authCode = code
+                semaphore.signal()
+            }
             
             print("\nPlease visit this URL to authorize the application:")
             print(request.authorizationRequestURL().absoluteString)
-            print("\nAfter authorizing, enter the code here: ", terminator: "")
             
-            guard let code = readLine()?.trimmingCharacters(in: .whitespacesAndNewlines) else {
-                throw NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "No code entered"])
+            // Wait for the callback
+            _ = semaphore.wait(timeout: .now() + 300) // 5 minute timeout
+            server.stop()
+            
+            guard let code = authCode else {
+                throw NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "No authorization code received"])
             }
             
             // Exchange code for tokens
@@ -74,15 +90,12 @@ class GoogleTasksService {
             let tokenResponse: OIDTokenResponse = try await withCheckedThrowingContinuation { continuation in
                 OIDAuthorizationService.perform(tokenRequest) { response, error in
                     if let error = error {
-                        print("Error getting token response: \(error.localizedDescription)")
                         continuation.resume(throwing: error)
                         return
                     }
                     if let response = response {
-                        print("Successfully received token response")
                         continuation.resume(returning: response)
                     } else {
-                        print("No token response received and no error provided")
                         continuation.resume(throwing: NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "No token response"]))
                     }
                 }
